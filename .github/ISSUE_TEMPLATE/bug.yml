@@ -1,0 +1,44 @@
+name: 缺陷
+description: 某个功能没有按预期工作
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 发生了什么
+      description: 实际看到的结果，和你预期的结果。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 怎么重现
+      description: 从打开程序开始，一步一步写。
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: 版本
+      description: 安装包或 APK 的版本号。自己编译的话写 commit。
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: 出问题的一端
+      multiple: true
+      options:
+        - 电脑（Windows）
+        - 手机（安卓）
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 环境
+      description: Windows 版本、安卓版本、手机型号。目标窗口是什么程序。
+  - type: textarea
+    attributes:
+      label: 补充
+      description: 不要贴配对码、token，也不要贴你发送的文字内容。

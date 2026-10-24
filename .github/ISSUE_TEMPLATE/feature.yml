@@ -1,0 +1,14 @@
+name: 功能建议
+description: 希望 Sideline 做到一件现在做不到的事
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: 想解决什么
+      description: 你现在在什么场景下做不到，而不是希望加哪个按钮。
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 你设想的做法
+      description: 可以空着。

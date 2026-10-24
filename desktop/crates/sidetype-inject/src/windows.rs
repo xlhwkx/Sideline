@@ -357,7 +357,7 @@ fn icon_png(icon: HICON) -> Vec<u8> {
     let dc = unsafe { CreateCompatibleDC(Some(screen)) };
     unsafe { windows::Win32::Graphics::Gdi::ReleaseDC(None, screen) };
     let previous = unsafe { SelectObject(dc, icon_info.hbmColor.into()) };
-    let mut header = BITMAPINFOHEADER {
+    let header = BITMAPINFOHEADER {
         biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
         biWidth: width,
         biHeight: -height,
