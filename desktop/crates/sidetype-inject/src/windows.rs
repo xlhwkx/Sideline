@@ -5,24 +5,21 @@
 
 use windows::core::BOOL;
 use windows::Win32::Foundation::{HWND, LPARAM};
-use windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES;
-use windows::Win32::UI::Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON};
-use windows::Win32::UI::WindowsAndMessaging::{
-    DestroyIcon, GetIconInfo, HICON,
-};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED};
+use windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES;
 use windows::Win32::System::Threading::GetCurrentProcessId;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetAsyncKeyState, VK_CONTROL, VK_LCONTROL, VK_MENU, VK_RCONTROL,
 };
+use windows::Win32::UI::Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON};
 use windows::Win32::UI::WindowsAndMessaging::{
-    BringWindowToTop, EnumWindows, GetAncestor, GetForegroundWindow, GetWindow,
-    GetWindowLongPtrW, GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId,
-    IsIconic, IsWindow, IsWindowVisible, IsZoomed, SetForegroundWindow, ShowWindow, GA_ROOT,
-    GWL_EXSTYLE, GW_OWNER, SHOW_WINDOW_CMD, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE,
-    WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+    BringWindowToTop, EnumWindows, GetAncestor, GetForegroundWindow, GetWindow, GetWindowLongPtrW,
+    GetWindowTextLengthW, GetWindowTextW, GetWindowThreadProcessId, IsIconic, IsWindow,
+    IsWindowVisible, IsZoomed, SetForegroundWindow, ShowWindow, GA_ROOT, GWL_EXSTYLE, GW_OWNER,
+    SHOW_WINDOW_CMD, SW_MAXIMIZE, SW_MINIMIZE, SW_RESTORE, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     WS_EX_TOPMOST,
 };
+use windows::Win32::UI::WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON};
 
 /// 手机上能点的一个窗口。
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,26 +78,38 @@ pub fn maximize_window(id: isize) -> bool {
     }
     let window = window.unwrap();
     if unsafe { IsZoomed(window) } == BOOL(1) {
-        unsafe { let _ = ShowWindow(window, SW_RESTORE); };
+        unsafe {
+            let _ = ShowWindow(window, SW_RESTORE);
+        };
         activate_window(id);
         return true;
     }
     if unsafe { IsIconic(window) } == BOOL(1) {
-        unsafe { let _ = ShowWindow(window, SW_RESTORE); };
+        unsafe {
+            let _ = ShowWindow(window, SW_RESTORE);
+        };
     }
-    unsafe { let _ = ShowWindow(window, SW_MAXIMIZE); };
+    unsafe {
+        let _ = ShowWindow(window, SW_MAXIMIZE);
+    };
     activate_window(id);
     true
 }
 
 fn hwnd(id: isize) -> Option<HWND> {
     let window = HWND(id as *mut core::ffi::c_void);
-    if unsafe { IsWindow(Some(window)) } == BOOL(0) { None } else { Some(window) }
+    if unsafe { IsWindow(Some(window)) } == BOOL(0) {
+        None
+    } else {
+        Some(window)
+    }
 }
 
 fn show(id: isize, command: SHOW_WINDOW_CMD) -> bool {
     let Some(window) = hwnd(id) else { return false };
-    unsafe { let _ = ShowWindow(window, command); };
+    unsafe {
+        let _ = ShowWindow(window, command);
+    };
     true
 }
 
@@ -143,18 +152,14 @@ fn focus_editor(window: HWND) {
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED,
     };
-    use windows::Win32::UI::Accessibility::{
-        CUIAutomation, IUIAutomation, TreeScope_Descendants,
-    };
+    use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation, TreeScope_Descendants};
 
     unsafe {
         // 同一线程重复初始化会返回「已经初始化」，照样可用。
         let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
-        let Ok(automation) = CoCreateInstance::<_, IUIAutomation>(
-            &CUIAutomation,
-            None,
-            CLSCTX_INPROC_SERVER,
-        ) else {
+        let Ok(automation) =
+            CoCreateInstance::<_, IUIAutomation>(&CUIAutomation, None, CLSCTX_INPROC_SERVER)
+        else {
             return;
         };
         let Ok(root) = automation.ElementFromHandle(window) else {
@@ -188,7 +193,9 @@ fn focus_editor(window: HWND) {
 }
 
 /// 没有窗口类名的文档。Electron 用它代表整个窗口，不是一个输入区。
-fn element_is_bare_document(element: &windows::Win32::UI::Accessibility::IUIAutomationElement) -> bool {
+fn element_is_bare_document(
+    element: &windows::Win32::UI::Accessibility::IUIAutomationElement,
+) -> bool {
     use windows::Win32::UI::Accessibility::UIA_DocumentControlTypeId;
     unsafe {
         element.CurrentControlType().map(|kind| kind.0).unwrap_or(0) == UIA_DocumentControlTypeId.0
@@ -217,7 +224,8 @@ fn editor_condition(
             Some(control_type(UIA_ComboBoxControlTypeId.0)?),
         ])?;
         let yes = VARIANT::from(true);
-        let focusable = automation.CreatePropertyCondition(UIA_IsKeyboardFocusablePropertyId, &yes)?;
+        let focusable =
+            automation.CreatePropertyCondition(UIA_IsKeyboardFocusablePropertyId, &yes)?;
         let enabled = automation.CreatePropertyCondition(UIA_IsEnabledPropertyId, &yes)?;
         let no = VARIANT::from(false);
         let onscreen = automation.CreatePropertyCondition(UIA_IsOffscreenPropertyId, &no)?;
@@ -268,7 +276,10 @@ fn describe(window: HWND) -> Option<SwitchableWindow> {
             topmost: style & WS_EX_TOPMOST.0 != 0,
             minimized: IsIconic(window) == BOOL(1),
             maximized: IsZoomed(window) == BOOL(1),
-            icon: base64::Engine::encode(&base64::engine::general_purpose::STANDARD, icon_of(window)),
+            icon: base64::Engine::encode(
+                &base64::engine::general_purpose::STANDARD,
+                icon_of(window),
+            ),
         })
     }
 }
@@ -350,7 +361,13 @@ fn icon_png(icon: HICON) -> Vec<u8> {
         return Vec::new();
     }
     let mut bitmap = BITMAP::default();
-    unsafe { GetObjectW(icon_info.hbmColor.into(), std::mem::size_of::<BITMAP>() as i32, Some(&mut bitmap as *mut _ as *mut _)) };
+    unsafe {
+        GetObjectW(
+            icon_info.hbmColor.into(),
+            std::mem::size_of::<BITMAP>() as i32,
+            Some(&mut bitmap as *mut _ as *mut _),
+        )
+    };
     let width = bitmap.bmWidth;
     let height = bitmap.bmHeight;
     let screen = unsafe { windows::Win32::Graphics::Gdi::GetDC(None) };
@@ -367,7 +384,18 @@ fn icon_png(icon: HICON) -> Vec<u8> {
     };
     let mut pixels = vec![0u8; (width * height * 4) as usize];
     let read = unsafe {
-        GetDIBits(dc, icon_info.hbmColor, 0, height as u32, Some(pixels.as_mut_ptr().cast()), &mut BITMAPINFO { bmiHeader: header, ..Default::default() }, DIB_RGB_COLORS)
+        GetDIBits(
+            dc,
+            icon_info.hbmColor,
+            0,
+            height as u32,
+            Some(pixels.as_mut_ptr().cast()),
+            &mut BITMAPINFO {
+                bmiHeader: header,
+                ..Default::default()
+            },
+            DIB_RGB_COLORS,
+        )
     };
     unsafe {
         SelectObject(dc, previous);
@@ -379,11 +407,13 @@ fn icon_png(icon: HICON) -> Vec<u8> {
     if read == 0 || width <= 0 || height <= 0 {
         return Vec::new();
     }
-    for pixel in pixels.chunks_exact_mut(4) {
+    for pixel in pixels.as_chunks_mut::<4>().0 {
         pixel.swap(0, 2);
     }
     let image = image::RgbaImage::from_raw(width as u32, height as u32, pixels);
-    let Some(image) = image else { return Vec::new() };
+    let Some(image) = image else {
+        return Vec::new();
+    };
     let mut bytes = std::io::Cursor::new(Vec::new());
     if image.write_to(&mut bytes, image::ImageFormat::Png).is_err() {
         return Vec::new();
@@ -403,7 +433,11 @@ fn title_of(window: HWND) -> Option<String> {
     }
     let title = String::from_utf16_lossy(&buffer[..written as usize]);
     let title = title.trim();
-    if title.is_empty() { None } else { Some(title.to_owned()) }
+    if title.is_empty() {
+        None
+    } else {
+        Some(title.to_owned())
+    }
 }
 
 fn modifier_is_down() -> bool {

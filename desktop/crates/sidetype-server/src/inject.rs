@@ -102,10 +102,16 @@ impl Injector {
 async fn window_action(id: &str, action: fn(isize) -> bool) -> Response {
     let id_owned = id.to_owned();
     let done = match id.parse::<isize>() {
-        Ok(value) => tokio::task::spawn_blocking(move || action(value)).await.unwrap_or(false),
+        Ok(value) => tokio::task::spawn_blocking(move || action(value))
+            .await
+            .unwrap_or(false),
         Err(_) => false,
     };
-    if done { ack_ok(id_owned) } else { ack_err(id_owned, ErrorCode::InjectFailed) }
+    if done {
+        ack_ok(id_owned)
+    } else {
+        ack_err(id_owned, ErrorCode::InjectFailed)
+    }
 }
 
 impl Default for Injector {

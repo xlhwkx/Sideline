@@ -12,6 +12,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-      - run: cargo fmt --manifest-path desktop/Cargo.toml --check
-      - run: cargo clippy --manifest-path desktop/Cargo.toml --all-targets -- -D warnings
-      - run: cargo test --manifest-path desktop/Cargo.toml
+      - name: fmt
+        working-directory: desktop
+        run: cargo fmt --check
+      - name: clippy
+        working-directory: desktop
+        run: cargo clippy --all-targets -- -D warnings
+      - name: test
+        working-directory: desktop
+        run: cargo test
