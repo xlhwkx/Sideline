@@ -52,7 +52,7 @@ jobs:
       - name: 按版本号命名
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          mv dist/*-setup.exe "dist/Sideline_${tag}_x64-setup.exe"
+          # 安装包的文件名里已经有版本号，只需要给 APK 改名。
           mv dist/app-debug.apk "dist/Sideline_${tag}.apk"
           ls -l dist
       - uses: softprops/action-gh-release@v2
