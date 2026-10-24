@@ -1,0 +1,13 @@
+[package]
+name = "sidetype-protocol"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+description = "SideType wire protocol v1. Types only, no IO."
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

@@ -1,0 +1,17 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo fmt --manifest-path desktop/Cargo.toml --check
+      - run: cargo clippy --manifest-path desktop/Cargo.toml --all-targets -- -D warnings
+      - run: cargo test --manifest-path desktop/Cargo.toml

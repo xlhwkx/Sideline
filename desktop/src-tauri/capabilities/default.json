@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "配对窗口只展示，不授予任何系统能力。",
+  "windows": ["pair"],
+  "permissions": []
+}

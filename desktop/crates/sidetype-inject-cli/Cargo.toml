@@ -1,0 +1,15 @@
+[package]
+name = "sidetype-inject-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+description = "Send text to the foreground window without starting the app."
+
+[[bin]]
+name = "sidetype-inject"
+path = "src/main.rs"
+
+[dependencies]
+sidetype-inject.workspace = true
