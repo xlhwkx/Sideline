@@ -139,9 +139,29 @@ pub fn activate_window(id: isize) -> bool {
     if foreground != window {
         return false;
     }
-    // 窗口到前台之后，里面有输入框就把它点亮。找不到或失败都不影响这次切换。
-    focus_editor(window);
+    // 窗口到前台之后，里面有输入框就把它点亮。控件树很大的窗口里这一步要扫好几秒，
+    // 所以只等一小会儿。超时就先让切换返回，搜索在后台结束，不再占用注入锁。
+    focus_editor_bounded(window, EDITOR_FOCUS_BUDGET);
     true
+}
+
+/// 找输入框最多花的时间。超过就放弃聚焦，切换本身已经完成。
+const EDITOR_FOCUS_BUDGET: std::time::Duration = std::time::Duration::from_millis(300);
+
+fn focus_editor_bounded(window: HWND, budget: std::time::Duration) {
+    // HWND 里是原始指针，不能跨线程。句柄的值是整数，传过去再还原。
+    let handle = window.0 as isize;
+    let search = std::thread::spawn(move || focus_editor(HWND(handle as *mut core::ffi::c_void)));
+    let started = std::time::Instant::now();
+    loop {
+        if search.is_finished() {
+            break;
+        }
+        if started.elapsed() >= budget {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
 }
 
 /// 在一个窗口里找第一个能打字的控件并给它焦点。

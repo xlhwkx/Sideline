@@ -11,6 +11,23 @@ pub const VK_CONTROL_KEY: u16 = VK_CONTROL.0;
 pub const VK_RETURN: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_RETURN.0;
 pub const VK_BACK: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_BACK.0;
 pub const VK_ESCAPE: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_ESCAPE.0;
+pub const KEY_A: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_A.0;
+pub const KEY_C: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_C.0;
+pub const KEY_S: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_S.0;
+pub const KEY_V: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_V.0;
+pub const KEY_X: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_X.0;
+pub const KEY_Y: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_Y.0;
+pub const KEY_Z: u16 = windows::Win32::UI::Input::KeyboardAndMouse::VK_Z.0;
+
+/// 按住 Ctrl 点一个键，再把两个都抬起。
+pub fn ctrl_then(vk: u16) -> Result<(), InjectError> {
+    send(&[
+        key_event(VK_CONTROL.0, 0, KEYBD_EVENT_FLAGS(0)),
+        key_event(vk, 0, KEYBD_EVENT_FLAGS(0)),
+        key_event(vk, 0, KEYEVENTF_KEYUP),
+        key_event(VK_CONTROL.0, 0, KEYEVENTF_KEYUP),
+    ])
+}
 
 /// Ctrl 是否处于按下状态。左右 Ctrl 都算。
 pub fn ctrl_is_down() -> bool {

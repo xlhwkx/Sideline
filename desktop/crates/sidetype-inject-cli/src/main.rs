@@ -55,6 +55,13 @@ fn run(mut args: impl Iterator<Item = String>) -> Result<(), Failure> {
                 "enter" => Key::Enter,
                 "backspace" => Key::Backspace,
                 "escape" => Key::Escape,
+                "copy" => Key::Copy,
+                "paste-key" => Key::Paste,
+                "cut" => Key::Cut,
+                "select-all" => Key::SelectAll,
+                "undo" => Key::Undo,
+                "save" => Key::Save,
+                "redo" => Key::Redo,
                 _ => return Err(Failure::Usage(usage())),
             };
             inject_key(key).map_err(Failure::Inject)
@@ -64,5 +71,5 @@ fn run(mut args: impl Iterator<Item = String>) -> Result<(), Failure> {
 }
 
 fn usage() -> String {
-    "用法：sidetype-inject <paste|type> <文字> [--enter] | sidetype-inject key <enter|backspace|escape>".into()
+    "用法：sidetype-inject <paste|type> <文字> [--enter] | sidetype-inject key <enter|backspace|escape|copy|paste-key|cut|select-all|undo|save|redo>".into()
 }

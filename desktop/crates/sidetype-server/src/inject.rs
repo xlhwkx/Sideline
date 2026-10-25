@@ -57,6 +57,7 @@ impl Injector {
     pub async fn focus(&self, id: &str) -> Response {
         let parsed = id.parse::<isize>().ok();
         let id_owned = id.to_owned();
+        let started = std::time::Instant::now();
         let switched = match parsed {
             Some(value) => tokio::task::spawn_blocking(move || {
                 // 列表按句柄排序，第一项不是前台窗口。再点一次最小化只对真正在前台的那个成立。
@@ -70,6 +71,12 @@ impl Injector {
             .unwrap_or(false),
             None => false,
         };
+        tracing::info!(
+            id = %id_owned,
+            ok = switched,
+            elapsed_ms = started.elapsed().as_millis() as u64,
+            "focus"
+        );
         if switched {
             ack_ok(id_owned)
         } else {
@@ -101,12 +108,19 @@ impl Injector {
 
 async fn window_action(id: &str, action: fn(isize) -> bool) -> Response {
     let id_owned = id.to_owned();
+    let started = std::time::Instant::now();
     let done = match id.parse::<isize>() {
         Ok(value) => tokio::task::spawn_blocking(move || action(value))
             .await
             .unwrap_or(false),
         Err(_) => false,
     };
+    tracing::info!(
+        id = %id_owned,
+        ok = done,
+        elapsed_ms = started.elapsed().as_millis() as u64,
+        "window"
+    );
     if done {
         ack_ok(id_owned)
     } else {
@@ -132,6 +146,13 @@ fn to_key(key: KeyName) -> Key {
         KeyName::Enter => Key::Enter,
         KeyName::Backspace => Key::Backspace,
         KeyName::Escape => Key::Escape,
+        KeyName::Copy => Key::Copy,
+        KeyName::Paste => Key::Paste,
+        KeyName::Cut => Key::Cut,
+        KeyName::SelectAll => Key::SelectAll,
+        KeyName::Undo => Key::Undo,
+        KeyName::Save => Key::Save,
+        KeyName::Redo => Key::Redo,
     }
 }
 

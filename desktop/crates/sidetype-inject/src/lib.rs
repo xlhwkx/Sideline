@@ -42,6 +42,20 @@ pub enum Key {
     Enter,
     Backspace,
     Escape,
+    /// Ctrl+C。
+    Copy,
+    /// Ctrl+V。
+    Paste,
+    /// Ctrl+X。
+    Cut,
+    /// Ctrl+A。
+    SelectAll,
+    /// Ctrl+Z。
+    Undo,
+    /// Ctrl+S。
+    Save,
+    /// Ctrl+Y。
+    Redo,
 }
 
 /// 注入失败的原因。调用方把它映射成协议错误码。
@@ -151,12 +165,18 @@ fn type_unicode(text: &str) -> Result<(), InjectError> {
 }
 
 fn tap(key: Key) -> Result<(), InjectError> {
-    let vk = match key {
-        Key::Enter => input::VK_RETURN,
-        Key::Backspace => input::VK_BACK,
-        Key::Escape => input::VK_ESCAPE,
-    };
-    input::tap_vk(vk)
+    match key {
+        Key::Copy => input::ctrl_then(input::KEY_C),
+        Key::Paste => input::ctrl_then(input::KEY_V),
+        Key::Cut => input::ctrl_then(input::KEY_X),
+        Key::SelectAll => input::ctrl_then(input::KEY_A),
+        Key::Undo => input::ctrl_then(input::KEY_Z),
+        Key::Save => input::ctrl_then(input::KEY_S),
+        Key::Redo => input::ctrl_then(input::KEY_Y),
+        Key::Enter => input::tap_vk(input::VK_RETURN),
+        Key::Backspace => input::tap_vk(input::VK_BACK),
+        Key::Escape => input::tap_vk(input::VK_ESCAPE),
+    }
 }
 
 #[cfg(test)]

@@ -3,6 +3,10 @@ package app.sidetype.android.ui
 import android.net.Uri
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -272,7 +276,40 @@ private fun TypeScreen(
             }
         }
         }
+        ShortcutRow(onKey)
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+/** 发到电脑当前窗口的组合键。显示键位，读屏读动作。 */
+private data class Shortcut(val name: String, val label: String, val description: String)
+
+private val SHORTCUTS = listOf(
+    Shortcut("copy", "Ctrl C", "复制"),
+    Shortcut("paste", "Ctrl V", "粘贴"),
+    Shortcut("cut", "Ctrl X", "剪切"),
+    Shortcut("select_all", "Ctrl A", "全选"),
+    Shortcut("undo", "Ctrl Z", "撤销"),
+    Shortcut("redo", "Ctrl Y", "重做"),
+    Shortcut("save", "Ctrl S", "保存"),
+)
+
+@Composable
+private fun ShortcutRow(onKey: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(top = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SHORTCUTS.forEach { shortcut ->
+            SuggestionChip(
+                onClick = { onKey(shortcut.name) },
+                label = { Text(shortcut.label) },
+                modifier = Modifier.semantics { contentDescription = shortcut.description },
+            )
+        }
     }
 }
 

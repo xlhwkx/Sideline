@@ -10,10 +10,6 @@
     "windows": [],
     "security": {
       "csp": "default-src 'self' data:; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
-    },
-    "trayIcon": {
-      "iconPath": "icons/icon.png",
-      "tooltip": "Sideline"
     }
   },
   "bundle": {

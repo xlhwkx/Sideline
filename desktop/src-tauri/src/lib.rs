@@ -25,9 +25,18 @@ pub fn run() {
         tracing::warn!("没有拿到管理员权限，管理员窗口将无法切换和输入");
     }
 
+    // 托盘程序没有控制台，日志写到文件，方便看每次窗口操作的耗时。
+    let log_dir = std::env::var("LOCALAPPDATA")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::path::PathBuf::from("."))
+        .join("Sideline");
+    let _ = std::fs::create_dir_all(&log_dir);
+    let writer = tracing_appender::rolling::never(&log_dir, "sideline.log");
     tracing_subscriber::fmt()
         .with_target(false)
         .with_max_level(tracing::Level::INFO)
+        .with_ansi(false)
+        .with_writer(writer)
         .init();
 
     tauri::Builder::default()
@@ -50,6 +59,13 @@ pub fn run() {
             start_server(Arc::clone(&server));
             app.manage(AppState { server });
             build_tray(app.handle())?;
+            // 托盘图标的消息窗口是个 14 像素的透明窗口，在这台机器上会显示在屏幕左上角。
+            // 它在事件循环启动后才被显示，所以晚一点再藏。
+            std::thread::spawn(|| {
+                // 窗口在创建之后才被设成可见，等它出现再藏。
+                std::thread::sleep(std::time::Duration::from_millis(300));
+                hide_tray_message_window();
+            });
             Ok(())
         })
         .build(tauri::generate_context!())
@@ -141,6 +157,53 @@ fn device_path(app: &tauri::App) -> tauri::Result<std::path::PathBuf> {
 
 fn computer_name() -> String {
     std::env::var("COMPUTERNAME").unwrap_or_else(|_| "SideType".into())
+}
+
+/// 藏起托盘图标用来接收消息的那个小窗口。它不属于任何 WebView 窗口。
+fn hide_tray_message_window() {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        FindWindowExW, GetWindowLongPtrW, GetWindowThreadProcessId, SetWindowLongPtrW, ShowWindow,
+        GWL_STYLE, SW_HIDE,
+    };
+
+    // 单实例插件的消息窗口。它靠 WM_COPYDATA 收第二个实例的参数，不需要可见，
+    // 但插件把窗口样式设成了 WS_VISIBLE，于是左上角多出一个小窗口。
+    for class_name in ["app.sidetype.desktop-sic", "Tao Thread Event Target"] {
+        hide_class(class_name);
+    }
+
+    fn hide_class(class_name: &str) {
+    let class_name: Vec<u16> = class_name.encode_utf16().chain(Some(0)).collect();
+    let mut window = HWND::default();
+    loop {
+        let found = unsafe {
+            FindWindowExW(
+                None,
+                Some(window),
+                windows::core::PCWSTR(class_name.as_ptr()),
+                None,
+            )
+        };
+        window = match found {
+            Ok(found) => found,
+            Err(_) => break,
+        };
+        if window.0.is_null() {
+            break;
+        }
+        let mut owner = 0u32;
+        unsafe { GetWindowThreadProcessId(window, Some(&mut owner)) };
+        if owner == std::process::id() {
+            unsafe {
+                // 去掉 WS_VISIBLE。只调 ShowWindow 会被上面设好的样式盖回去。
+                let style = GetWindowLongPtrW(window, GWL_STYLE);
+                let _ = SetWindowLongPtrW(window, GWL_STYLE, style & !0x1000_0000);
+                let _ = ShowWindow(window, SW_HIDE);
+            }
+        }
+    }
+    }
 }
 
 /// 当前进程是否已经以管理员运行。

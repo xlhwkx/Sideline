@@ -119,6 +119,20 @@ pub enum KeyName {
     Enter,
     Backspace,
     Escape,
+    /// 复制，Ctrl+C。
+    Copy,
+    /// 粘贴，Ctrl+V。
+    Paste,
+    /// 剪切，Ctrl+X。
+    Cut,
+    /// 全选，Ctrl+A。
+    SelectAll,
+    /// 撤销，Ctrl+Z。
+    Undo,
+    /// 保存，Ctrl+S。
+    Save,
+    /// 重做，Ctrl+Y。
+    Redo,
 }
 
 /// 协议里的全部错误码。
